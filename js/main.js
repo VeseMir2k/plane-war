@@ -160,29 +160,29 @@
 			}
 		},
 
-		draw: function (obj, move) {
+		draw: function (Obj, move) {
 			Game.ctx.drawImage(
 				Game.sprite,
-				obj.source_x,
-				obj.source_y,
-				obj.source_w,
-				obj.source_h,
-				obj.destination_x -= move,
-				obj.destination_y,
-				obj.destination_w,
-				obj.destination_h
+				Obj.source_x,
+				Obj.source_y,
+				Obj.source_w,
+				Obj.source_h,
+				Obj.destination_x -= move,
+				Obj.destination_y,
+				Obj.destination_w,
+				Obj.destination_h
 			);
 		},
 
-		deleteBackground: function (i) {
-			if (this.backgrounds[i].destination_x <= -this.backgrounds[i].destination_w) {
-				delete this.backgrounds[i];
+		deleteBackground: function (o) {
+			if (this.backgrounds[o].destination_x <= -this.backgrounds[o].destination_w) {
+				delete this.backgrounds[o];
 			}
 		},
 
-		deleteGround: function (i) {
-			if (this.grounds[i].destination_x <= -this.grounds[i].destination_w) {
-				delete this.grounds[i];
+		deleteGround: function (o) {
+			if (this.grounds[o].destination_x <= -this.grounds[o].destination_w) {
+				delete this.grounds[o];
 			}
 		}
 	};
@@ -237,20 +237,20 @@
 			}
 		},
 
-		draw: function (obj, frames) {
+		draw: function (Obj, frames) {
 			Game.ctx.drawImage(
 				Game.sprite,
-				obj.source_x + frames[obj.current_f] * obj.source_w,
-				obj.source_y,
-				obj.source_w,
-				obj.source_h,
-				obj.destination_x,
-				obj.destination_y,
-				obj.destination_w,
-				obj.destination_h
+				Obj.source_x + frames[Obj.current_f] * Obj.source_w,
+				Obj.source_y,
+				Obj.source_w,
+				Obj.source_h,
+				Obj.destination_x,
+				Obj.destination_y,
+				Obj.destination_w,
+				Obj.destination_h
 			);
 			//
-			obj.current_f = obj.current_f + 1 >= frames.length ? 0 : obj.current_f + 1;
+			Obj.current_f = Obj.current_f + 1 >= frames.length ? 0 : Obj.current_f + 1;
 		}
 	};
 
@@ -264,6 +264,7 @@
 			this.count = 0;
 			this.move = 5;
 			this.colorOpponents = [115, 230, 345];
+			this.colorBullets = [1290, 1300, 1310];
 			this.coordinates = [];
 			//
 			this.amountOpponents = Math.floor(Game.cH / this.opponent_h);
@@ -271,6 +272,8 @@
 			this.halfResidue = ((Game.cH / this.amountOpponents) - this.opponent_h) / 2;
 			//
 			this.coordinate = 0;
+			//
+			this.avoidFrames = 5;
 		},
 
 		setCoordinates: function () {
@@ -286,11 +289,13 @@
 		addOpponent: function () {
 			this.count++;
 			//
+			this.randomColor = Game.random(this.colorOpponents.length);
+			//
 			this.id = 'opponent_' + this.count;
 			this.opponents[this.id] = {
 				//
 				source_x: 0,
-				source_y: this.colorOpponents[Game.random(this.colorOpponents.length)],
+				source_y: this.colorOpponents[this.randomColor],
 				source_w: 169,
 				source_h: 114,
 				//
@@ -301,37 +306,69 @@
 				//
 				frames: [0, 1],
 				framesShot: [2, 3, 4, 5, 6],
+				current_f: 0,
+				//
+				bullets: {},
+				countBullet: 0,
+				colorBullet: this.colorBullets[this.randomColor],
 				shot: false,
-				current_f: 0
+				avoidFrames: 5
 			};
 		},
 
 		loadOpponents: function () {
 			for (let i in this.opponents) {
-				this.draw(this.opponents[i]);
+				//
+				if (this.opponents[i].destination_y == Player.player.player_1.destination_y) {
+					//
+					if (this.opponents[i].avoidFrames === this.avoidFrames) {
+						Bullet.addBulletOpponent(i);
+						this.opponents[i].shot = true;
+						//
+						this.opponents[i].avoidFrames = 0;
+					} else {
+						this.opponents[i].avoidFrames++;
+					}
+				}
+				//
+				if (!this.opponents[i].shot) {
+					// Rysowanie pojazdu przeciwnika bez strzału i wyzerowanie licznika klatek
+					this.draw(this.opponents[i], this.opponents[i].frames);
+					this.opponents[i].current_f = 0;
+				} else if (this.opponents[i].shot) {
+					// Rysowanie pojazdu przeciwnika po strzale
+					this.draw(this.opponents[i], this.opponents[i].framesShot);
+					// Sprawdzenie czy zakończyć animacje strzału
+					if (this.opponents[i].current_f + 1 == this.opponents[i].framesShot.length) {
+						// Wyzerowanie licznika klatek i ustawienie shot = false
+						this.opponents[i].current_f = 0;
+						this.opponents[i].shot = false;
+					}
+				}
+				//
 				this.deleteOpponent(i);
 			}
 		},
 
-		draw: function (obj) {
+		draw: function (Obj, frames) {
 			Game.ctx.drawImage(
 				Game.sprite,
-				obj.source_x + obj.frames[obj.current_f] * obj.source_w,
-				obj.source_y,
-				obj.source_w,
-				obj.source_h,
-				obj.destination_x -= this.move,
-				obj.destination_y,
-				obj.destination_w,
-				obj.destination_h
+				Obj.source_x + frames[Obj.current_f] * Obj.source_w,
+				Obj.source_y,
+				Obj.source_w,
+				Obj.source_h,
+				Obj.destination_x -= this.move,
+				Obj.destination_y,
+				Obj.destination_w,
+				Obj.destination_h
 			);
 			//
-			obj.current_f = obj.current_f + 1 >= obj.frames.length ? 0 : obj.current_f + 1;
+			Obj.current_f = Obj.current_f + 1 >= frames.length ? 0 : Obj.current_f + 1;
 		},
 
-		deleteOpponent: function (i) {
-			if (this.opponents[i].destination_x <= -this.opponents[i].destination_w) {
-				delete this.opponents[i];
+		deleteOpponent: function (o) {
+			if (this.opponents[o].destination_x <= -this.opponents[o].destination_w) {
+				delete this.opponents[o];
 			}
 		}
 	};
@@ -344,6 +381,7 @@
 			this.countBulletsPlayer = 0;
 			//
 			this.moveBulletPlayer = 10;
+			this.moveBulletOpponent = -10;
 		},
 
 		addBulletPlayer: function () {
@@ -364,31 +402,63 @@
 			};
 		},
 
-		loadBullet: function () {
-			for (let i in this.bulletsPlayer) {
-				this.draw(this.bulletsPlayer[i], this.moveBulletPlayer);
+		addBulletOpponent: function (o) {
+			Opponent.opponents[o].countBullet++;
+			//
+			this.id = `bullet_${Opponent.opponents[o].countBullet}`;
+			Opponent.opponents[o].bullets[this.id] = {
 				//
-				this.deleteBulletPlayer(i);
+				source_x: Opponent.opponents[o].colorBullet,
+				source_y: 460,
+				source_w: 10,
+				source_h: 6,
+				//
+				destination_x: Opponent.opponents[o].destination_x + 20,
+				destination_y: Opponent.opponents[o].destination_y + 83,
+				destination_w: 10,
+				destination_h: 6
 			}
 		},
 
-		draw: function (obj, move) {
+		loadBullet: function () {
+			//
+			for (let i in this.bulletsPlayer) {
+				this.draw(this.bulletsPlayer[i], this.moveBulletPlayer);
+				this.deleteBulletPlayer(i);
+			}
+			//
+			for (let i in Opponent.opponents) {
+				//
+				for (let j in Opponent.opponents[i].bullets) {
+					this.draw(Opponent.opponents[i].bullets[j], this.moveBulletOpponent);
+					this.deleteBulletOpponent(i, j)
+				}
+			}
+		},
+
+		draw: function (Obj, move) {
 			Game.ctx.drawImage(
 				Game.sprite,
-				obj.source_x,
-				obj.source_y,
-				obj.source_w,
-				obj.source_h,
-				obj.destination_x += move,
-				obj.destination_y,
-				obj.destination_w,
-				obj.destination_h
+				Obj.source_x,
+				Obj.source_y,
+				Obj.source_w,
+				Obj.source_h,
+				Obj.destination_x += move,
+				Obj.destination_y,
+				Obj.destination_w,
+				Obj.destination_h
 			);
 		},
 
-		deleteBulletPlayer: function (i) {
-			if (this.bulletsPlayer[i].destination_x >= Game.cW) {
-				delete this.bulletsPlayer[i];
+		deleteBulletPlayer: function (o) {
+			if (this.bulletsPlayer[o].destination_x >= Game.cW) {
+				delete this.bulletsPlayer[o];
+			}
+		},
+
+		deleteBulletOpponent: function (o, ob) {
+			if (Opponent.opponents[o].bullets[ob].destination_x <= 0) {
+				delete Opponent.opponents[o].bullets[ob];
 			}
 		}
 	};
