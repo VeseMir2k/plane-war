@@ -27,34 +27,31 @@
 			// Sterowanie pojazdem gracza
 			ControlPlayer.VAR();
 			ControlPlayer.events();
-			// Animowanie gry
+			// Wywołanie odświeżania gry 
 			this.animationLoop();
 		},
 
 		animationLoop: function (time) {
 			requestAnimationFrame(this.animationLoop.bind(this));
-			//
 			if (time - this.lastTime >= 1000 / this.fps) {
-				//
 				this.lastTime = time;
-				// Ustawienie rozdzielczości
+				// Wywołanie ustawień rozdzielczości
 				this.layout();
-				// Ładowanie grafiki w tle
+				// Wywołanie ładowania grafiki w tle
 				Board.loadBoard();
-				// Ładowanie pojazdu gracza
+				// Wywołanie ładowania pojazdu gracza
 				Player.loadPlayer();
-				// Sterowanie pojazdem gracza
+				// Wywolanie sterowania pojazdem gracza
 				ControlPlayer.control();
-				// Ładowanie pojazdow przeciwników
+				// Wywołanie ładowania pojazdow przeciwników
 				Opponent.loadOpponents();
-				// Ładowanie pocisków gracza i przeciwnika
+				// Wywołanie ładowania pocisków gracza i przeciwnika
 				Bullet.loadBullet();
 			}
 
 			if (time - this.opponentsTime >= 3000) {
-				//
 				this.opponentsTime = time;
-				// Dodawanie przeciwnika
+				// Wywołanie dodawania przeciwnika
 				Opponent.addOpponent();
 			}
 		},
@@ -93,21 +90,19 @@
 		addBackground: function (dx) {
 			this.countBackground++;
 			//
-			this.id = 'background_' + this.countBackground;
+			this.id = `background_${this.countBackground}`;
 			this.backgrounds[this.id] = {
-				//
+				// Punkt i rozmiar wycinania grafiki
 				source_x: 0,
 				source_y: 460,
-				//
 				source_w: 1280,
 				source_h: 720,
-				//
+				// Punkt i rozmiar wstawienia wyciętej grafiki
 				destination_x: dx,
 				destination_y: 0,
-				//
 				destination_w: 1280,
 				destination_h: 720,
-				//
+				// Sprawdzenie pozycji background
 				checkPosition: true
 			};
 		},
@@ -117,45 +112,47 @@
 			//
 			this.id = 'ground_' + this.countGround;
 			this.grounds[this.id] = {
-				//
+				// Punkt i rozmiar wycinania grafiki
 				source_x: 0,
 				source_y: 1180,
-				//
 				source_w: 950,
 				source_h: 83,
-				//
+				// Punkt i rozmiar wstawienia wyciętej grafiki
 				destination_x: dx,
 				destination_y: 637,
-				//
 				destination_w: 950,
 				destination_h: 83,
-				//
+				// Sprawdzenie pozycji background
 				checkPosition: true
 			};
 		},
 
 		loadBoard: function () {
 			for (let i in this.backgrounds) {
+				// Wywołanie rysowania background
 				this.draw(this.backgrounds[i], this.moveBgackground);
-				//
+				// Sprawdzenie czy dodać następny background
 				if (this.backgrounds[i].destination_x <= Game.cW && this.backgrounds[i].checkPosition) {
-					//
+					// Dodanie background na koniec wcześniejszego background
 					this.addBackground(this.backgrounds[i].destination_x + this.backgrounds[i].destination_w - 1);
-					//
+					// Ustawienie checkPosition = false
 					this.backgrounds[i].checkPosition = false;
 				}
+				// Wywołanie usunięcia background
 				this.deleteBackground(i);
 			}
 			//
 			for (let i in this.grounds) {
+				// Wywołanie rysowania ground
 				this.draw(this.grounds[i], this.moveGrround);
-				//
+				// Sprawdzenie czy dodać następny ground
 				if (this.grounds[i].destination_x <= Game.cW && this.grounds[i].checkPosition) {
-					//
+					// Dodanie ground na koniec wcześniejszego background
 					this.addGround(this.grounds[i].destination_x + this.grounds[i].destination_w);
-					//
+					// Ustawienie checkPosition = false
 					this.grounds[i].checkPosition = false;
 				}
+				// Wywołanie usunięcia ground
 				this.deleteGround(i);
 			}
 		},
@@ -200,21 +197,24 @@
 		addPlayer: function () {
 			this.id = 'player_1';
 			this.player[this.id] = {
-				//
+				// Punkt i rozmiar wycinania grafiki
 				source_x: 0,
 				source_y: 0,
 				source_w: 169,
 				source_h: 114,
-				//
+				// Punkt i rozmiar wstawienia wyciętej grafiki
 				destination_x: 20,
 				destination_y: (Game.cH / 2) - (this.player_h / 2),
 				destination_w: this.player_w,
 				destination_h: this.player_h,
-				//
+				// Klatki animacji pojazdu
 				frames: [0, 1],
 				framesShot: [2, 3, 4, 5, 6],
-				shot: false,
-				current_f: 0
+				current_f: 0,
+				// Pociski
+				bullets: {},
+				countBullet: 0,
+				shot: false
 			};
 		},
 
@@ -249,7 +249,7 @@
 				Obj.destination_w,
 				Obj.destination_h
 			);
-			//
+			// Przewijanie do następnej pozycji pojazdu
 			Obj.current_f = Obj.current_f + 1 >= frames.length ? 0 : Obj.current_f + 1;
 		}
 	};
@@ -266,20 +266,19 @@
 			this.colorOpponents = [115, 230, 345];
 			this.colorBullets = [1290, 1300, 1310];
 			this.coordinates = [];
-			//
+			// Ilość przeciwnikó w jednej lini
 			this.amountOpponents = Math.floor(Game.cH / this.opponent_h);
 			//
 			this.halfResidue = ((Game.cH / this.amountOpponents) - this.opponent_h) / 2;
 			//
 			this.coordinate = 0;
-			//
-			this.avoidFrames = 5;
+			// Klatki ominięte przys trzelaniu przeciwnika
+			this.avoidFrames = 7;
 		},
 
 		setCoordinates: function () {
-			//
+			// Ustawienie coordinatespojawiania sie przeciwników
 			for (let i = 0; i < this.amountOpponents; i++) {
-				//
 				this.coordinate += this.halfResidue;
 				this.coordinates[i] = this.coordinate;
 				this.coordinate += this.halfResidue + this.opponent_h;
@@ -288,26 +287,26 @@
 
 		addOpponent: function () {
 			this.count++;
-			//
+			// Losowanie koloru pojazdu przeciwnikó
 			this.randomColor = Game.random(this.colorOpponents.length);
 			//
-			this.id = 'opponent_' + this.count;
+			this.id = `opponent_${this.count}`;
 			this.opponents[this.id] = {
-				//
+				// Punkt i rozmiar wycinania grafiki
 				source_x: 0,
 				source_y: this.colorOpponents[this.randomColor],
 				source_w: 169,
 				source_h: 114,
-				//
+				// Punkt i rozmiar wstawienia wyciętej grafiki
 				destination_x: Game.cW,
 				destination_y: this.coordinates[Game.random(this.coordinates.length)],
 				destination_w: this.opponent_w,
 				destination_h: this.opponent_h,
-				//
+				// Klatki animacji pojazdu
 				frames: [0, 1],
 				framesShot: [2, 3, 4, 5, 6],
 				current_f: 0,
-				//
+				// Pociski
 				bullets: {},
 				countBullet: 0,
 				colorBullet: this.colorBullets[this.randomColor],
@@ -318,25 +317,28 @@
 
 		loadOpponents: function () {
 			for (let i in this.opponents) {
-				//
-				if (this.opponents[i].destination_y == Player.player.player_1.destination_y) {
-					//
+				// Sprawdzenie czy działko przeciwnika jest równe z pojazdem gracza
+				if (this.opponents[i].destination_y + 85 >= Player.player.player_1.destination_y &&
+					this.opponents[i].destination_y + 85 <= Player.player.player_1.destination_y + Player.player.player_1.destination_h) {
+					// Opuszczanie klatek w celu zrobienia odstępów między pociskami
 					if (this.opponents[i].avoidFrames === this.avoidFrames) {
+						// Wywołanie dodania pocisków przeciwnika
 						Bullet.addBulletOpponent(i);
 						this.opponents[i].shot = true;
-						//
+						// Wyzerowanie licznika opuszczenia klatek
 						this.opponents[i].avoidFrames = 0;
 					} else {
+						// Zwiększenie licznika opuszczenia klatek
 						this.opponents[i].avoidFrames++;
 					}
 				}
 				//
 				if (!this.opponents[i].shot) {
-					// Rysowanie pojazdu przeciwnika bez strzału i wyzerowanie licznika klatek
+					// Wywołanie rysowania pojazdu przeciwnika bez strzału i wyzerowanie licznika klatek
 					this.draw(this.opponents[i], this.opponents[i].frames);
 					this.opponents[i].current_f = 0;
 				} else if (this.opponents[i].shot) {
-					// Rysowanie pojazdu przeciwnika po strzale
+					// Wywołanie rysowania pojazdu przeciwnika po strzale
 					this.draw(this.opponents[i], this.opponents[i].framesShot);
 					// Sprawdzenie czy zakończyć animacje strzału
 					if (this.opponents[i].current_f + 1 == this.opponents[i].framesShot.length) {
@@ -362,7 +364,7 @@
 				Obj.destination_w,
 				Obj.destination_h
 			);
-			//
+			// Przewijanie do następnej pozycji pojazdu
 			Obj.current_f = Obj.current_f + 1 >= frames.length ? 0 : Obj.current_f + 1;
 		},
 
@@ -377,24 +379,21 @@
 
 	const Bullet = {
 		VAR: function () {
-			this.bulletsPlayer = {};
-			this.countBulletsPlayer = 0;
-			//
 			this.moveBulletPlayer = 10;
 			this.moveBulletOpponent = -10;
 		},
 
 		addBulletPlayer: function () {
-			this.countBulletsPlayer++;
+			Player.player.player_1.countBullet++;
 			//
-			this.id = 'bullet_' + this.countBulletsPlayer;
-			this.bulletsPlayer[this.id] = {
-				//
+			this.id = `bullet_${Player.player.player_1.countBullet}`;
+			Player.player.player_1.bullets[this.id] = {
+				// Punkt i rozmiar wycinania grafiki
 				source_x: 1280,
 				source_y: 460,
 				source_w: 10,
 				source_h: 6,
-				//
+				// Punkt i rozmiar wstawienia wyciętej grafiki
 				destination_x: 144,
 				destination_y: Player.player.player_1.destination_y + 83,
 				destination_w: 10,
@@ -407,13 +406,13 @@
 			//
 			this.id = `bullet_${Opponent.opponents[o].countBullet}`;
 			Opponent.opponents[o].bullets[this.id] = {
-				//
+				// Punkt i rozmiar wycinania grafiki
 				source_x: Opponent.opponents[o].colorBullet,
 				source_y: 460,
 				source_w: 10,
 				source_h: 6,
-				//
-				destination_x: Opponent.opponents[o].destination_x + 20,
+				// Punkt i rozmiar wstawienia wyciętej grafiki
+				destination_x: Opponent.opponents[o].destination_x + 35,
 				destination_y: Opponent.opponents[o].destination_y + 83,
 				destination_w: 10,
 				destination_h: 6
@@ -421,17 +420,17 @@
 		},
 
 		loadBullet: function () {
-			//
-			for (let i in this.bulletsPlayer) {
-				this.draw(this.bulletsPlayer[i], this.moveBulletPlayer);
-				this.deleteBulletPlayer(i);
+			for (let i in Player.player) {
+				for (let j in Player.player[i].bullets) {
+					this.draw(Player.player[i].bullets[j], this.moveBulletPlayer);
+					this.deleteBulletPlayer(i, j);
+				}
 			}
 			//
 			for (let i in Opponent.opponents) {
-				//
 				for (let j in Opponent.opponents[i].bullets) {
 					this.draw(Opponent.opponents[i].bullets[j], this.moveBulletOpponent);
-					this.deleteBulletOpponent(i, j)
+					this.deleteBulletOpponent(i, j);
 				}
 			}
 		},
@@ -450,9 +449,9 @@
 			);
 		},
 
-		deleteBulletPlayer: function (o) {
-			if (this.bulletsPlayer[o].destination_x >= Game.cW) {
-				delete this.bulletsPlayer[o];
+		deleteBulletPlayer: function (o, ob) {
+			if (Player.player[o].bullets[ob].destination_x >= Game.cW) {
+				delete Player.player[o].bullets[ob];
 			}
 		},
 
