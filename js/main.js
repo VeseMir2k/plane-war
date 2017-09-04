@@ -379,15 +379,21 @@
 
 	const Bullet = {
 		VAR: function () {
+			this.bulletsPlayer = {};
+			this.bulletsOpponents = {};
+			//
+			this.countBulletPlayer = 0;
+			this.countBulletOpponents = 0;
+			//
 			this.moveBulletPlayer = 10;
 			this.moveBulletOpponent = -10;
 		},
 
 		addBulletPlayer: function () {
-			Player.player.player_1.countBullet++;
+			this.countBulletPlayer++;
 			//
-			this.id = `bullet_${Player.player.player_1.countBullet}`;
-			Player.player.player_1.bullets[this.id] = {
+			this.id = `bullet_${this.countBulletPlayer}`;
+			this.bulletsPlayer[this.id] = {
 				// Punkt i rozmiar wycinania grafiki
 				source_x: 1280,
 				source_y: 460,
@@ -420,11 +426,9 @@
 		},
 
 		loadBullet: function () {
-			for (let i in Player.player) {
-				for (let j in Player.player[i].bullets) {
-					this.draw(Player.player[i].bullets[j], this.moveBulletPlayer);
-					this.deleteBulletPlayer(i, j);
-				}
+			for (let i in this.bulletsPlayer) {
+				this.draw(this.bulletsPlayer[i], this.moveBulletPlayer);
+				this.deleteBulletPlayer(i);
 			}
 			//
 			for (let i in Opponent.opponents) {
@@ -449,9 +453,10 @@
 			);
 		},
 
-		deleteBulletPlayer: function (o, ob) {
-			if (Player.player[o].bullets[ob].destination_x >= Game.cW) {
-				delete Player.player[o].bullets[ob];
+		deleteBulletPlayer: function (o) {
+			if (Player.player.player_1.destination_x >= Game.cW) {
+				console.log('hej')
+				delete this.bulletsPlayer[o];
 			}
 		},
 
