@@ -27,6 +27,8 @@
             // Sterowanie pojazdem gracza
             ControlPlayer.VAR();
             ControlPlayer.events();
+            //
+            Collision.VAR();
             // Wywołanie odświeżania gry 
             this.animationLoop();
         },
@@ -47,6 +49,8 @@
                 Opponent.loadOpponents();
                 // Wywołanie ładowania pocisków gracza i przeciwnika
                 Bullet.loadBullet();
+                //
+                Collision.loadCollision();
             }
 
             if (time - this.opponentsTime >= 3000) {
@@ -460,6 +464,29 @@
                 delete this.bulletsOpponents[o];
             }
         }
+    };
+
+    /* ------------------------------------------------------------------------------------------------------------------------------------------------ */
+
+    const Collision = {
+        VAR: function () {
+            this.player = Player.player.player_1;
+            this.opponents = Opponent.opponents;
+        },
+
+        loadCollision: function () {
+            this.collisionPlayer();
+        },
+
+        collisionPlayer: function () {
+            for (let i in Opponent.opponents) {
+                if (this.player.destination_x + this.player.destination_w <= this.opponents[i].destination_x &&
+                    this.player.destination_y >= this.opponents[i].destination_y &&
+                    this.player.destination_y + this.player.destination_h >= this.opponents[i].destination_y) {
+                    console.log('hej');
+                }
+            }
+        },
     };
 
     /* ------------------------------------------------------------------------------------------------------------------------------------------------ */
