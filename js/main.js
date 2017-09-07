@@ -470,23 +470,133 @@
 
     const Collision = {
         VAR: function () {
-            this.player = Player.player.player_1;
-            this.opponents = Opponent.opponents;
+            this.pl = Player.player.player_1;
+            this.ops = Opponent.opponents;
+            this.bops = Bullet.bulletsOpponents;
+            this.bpl = Bullet.bulletsPlayer;
+            //
+            this.explosion = {}
+            this.countExplosion = 0;
+            //
+            this.avoidFrames = 1;
         },
 
         loadCollision: function () {
-            this.collisionPlayer();
+            this.collisionPlayerWithOpponent();
+            this.collisionPlayerWithBulletsOpponent();
+            this.collisionBulletsPlayerWithOpponent();
+            this.collisionPlayerWithBoard();
+            //
+            this.loadExplosion();
         },
 
-        collisionPlayer: function () {
+        collisionPlayerWithOpponent: function () {
             for (let i in Opponent.opponents) {
-                if (this.player.destination_x + this.player.destination_w <= this.opponents[i].destination_x &&
-                    this.player.destination_y >= this.opponents[i].destination_y &&
-                    this.player.destination_y + this.player.destination_h >= this.opponents[i].destination_y) {
-                    console.log('hej');
+                if (this.ops[i].destination_x <= this.pl.destination_x + (this.pl.destination_w - 30) &&
+                    (this.ops[i].destination_y >= this.pl.destination_y && this.ops[i].destination_y <= this.pl.destination_y + this.pl.destination_h ||
+                        this.ops[i].destination_y + this.ops[i].destination_h >= this.pl.destination_y && this.ops[i].destination_y + this.ops[i].destination_h <= this.pl.destination_y + this.pl.destination_h)) {
+                    //
+                    this.addExplosion(this.ops[i].destination_x, this.ops[i].destination_y);
+                    //
+                    delete this.ops[i];
                 }
             }
         },
+
+        collisionPlayerWithBulletsOpponent: function () {
+            for (let i in Bullet.bulletsOpponents) {
+                if (this.bops[i].destination_x <= this.pl.destination_x + (this.pl.destination_w - 60) &&
+                    (this.bops[i].destination_y >= this.pl.destination_y && this.bops[i].destination_y <= this.pl.destination_y + this.pl.destination_h - 10 ||
+                        this.bops[i].destination_y + this.bops[i].destination_h >= this.pl.destination_y && this.bops[i].destination_y + this.bops[i].destination_h <= this.pl.destination_y + this.pl.destination_h - 10)) {
+                    delete this.bops[i];
+                }
+            }
+        },
+
+        collisionBulletsPlayerWithOpponent: function () {
+            for (let i in Opponent.opponents) {
+                for (let j in Bullet.bulletsPlayer) {
+                    if (this.bpl[j].destination_x >= this.ops[i].destination_x + (this.ops[i].destination_h - 60) &&
+                        (this.bpl[j].destination_y >= this.ops[i].destination_y && this.bpl[j].destination_y <= this.ops[i].destination_y + this.ops[i].destination_h - 10 ||
+                            this.bpl[j].destination_y + this.bpl.destination_h >= this.ops[i].destination_y && this.bpl[j].destination_y + this.bpl[j].destination_h <= this.ops[i].destination_y + this.ops[i].destination_h - 10)) {
+                        //
+                        this.addExplosion(this.ops[i].destination_x, this.ops[i].destination_y);
+                        //
+                        delete this.ops[i];
+                        delete this.bpl[j];
+                        break;
+                    }
+                }
+            }
+        },
+
+        collisionPlayerWithBoard: function () {
+            if (this.pl.destination_y <= 0) {
+                this.pl.destination_y = 0;
+            } else if (this.pl.destination_y >= Game.cH - this.pl.destination_h) {
+                this.pl.destination_y = Game.cH - this.pl.destination_h;
+            }
+        },
+
+        collisionOpponentWithOpponent: function () {
+
+        },
+
+        addExplosion: function (dx, dy) {
+            this.countExplosion++;
+            //
+            this.id = `explosion_${this.countExplosion}`;
+            this.explosion[this.id] = {
+                // Punkt i rozmiar wycinania grafiki
+                source_x: 0,
+                source_y: 1595,
+                source_w: 192,
+                source_h: 192,
+                // Punkt i rozmiar wstawienia wyciętej grafiki
+                destination_x: dx - 50,
+                destination_y: dy - 30,
+                destination_w: 192,
+                destination_h: 192,
+                //
+                frames: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+                current_f: 0,
+                //
+                avoidFrames: 1
+            }
+        },
+
+        loadExplosion: function () {
+            for (let i in this.explosion) {
+                this.draw(this.explosion[i], this.explosion[i].frames);
+                //
+                if (this.explosion[i].current_f === this.explosion[i].frames.length - 1) {
+                    delete this.explosion[i];
+                }
+            }
+        },
+
+        draw: function (Obj, frames) {
+            Game.ctx.drawImage(
+                Game.sprite,
+                Obj.source_x + frames[Obj.current_f] * Obj.source_w,
+                Obj.source_y,
+                Obj.source_w,
+                Obj.source_h,
+                Obj.destination_x,
+                Obj.destination_y,
+                Obj.destination_w,
+                Obj.destination_h
+            );
+            // Przewijanie do następnej pozycji pojazdu
+            if (Obj.avoidFrames === this.avoidFrames) {
+                Obj.current_f = Obj.current_f + 1 >= frames.length ? 0 : Obj.current_f + 1;
+
+                Obj.avoidFrames = 0
+            } else {
+                Obj.avoidFrames++;
+            }
+        },
+
     };
 
     /* ------------------------------------------------------------------------------------------------------------------------------------------------ */
